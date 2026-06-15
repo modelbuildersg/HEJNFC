@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Name Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C9A84C; --gold-dim:rgba(201,168,76,0.1); --gold-border:rgba(201,168,76,0.3);
+  --bg:#0C0C0C; --s1:#141414; --s2:#1C1C1C; --s3:#252525;
+  --b1:rgba(255,255,255,0.06); --b2:rgba(255,255,255,0.11); --b3:rgba(255,255,255,0.18);
+  --white:#F5F5F0; --muted:#7A7A74; --green:#34C759; --red:#FF3B30;
+}
+html,body{min-height:100vh;background:var(--bg);font-family:'Inter',sans-serif;color:var(--white);-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+.header{
+  height:52px;background:rgba(12,12,12,0.96);backdrop-filter:blur(12px);
+  border-bottom:0.5px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;position:sticky;top:0;z-index:100;
+}
+.logo{font-size:14px;font-weight:600}
+.logo em{color:var(--gold);font-style:normal}
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:20px;
+  font-size:11px;font-weight:500;
+}
+.status-pill.saved{background:rgba(52,199,89,0.12);color:var(--green)}
+.status-pill.unsaved{background:rgba(201,168,76,0.12);color:var(--gold)}
+.status-dot{width:6px;height:6px;border-radius:50%}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 52px)}
+@media(max-width:800px){.app{grid-template-columns:1fr}.preview-col{display:none}}
+
+/* EDITOR */
+.editor-col{
+  background:var(--s1);border-right:0.5px solid var(--b1);
+  overflow-y:auto;padding:1.5rem;
+}
+
+.section-head{
+  font-size:10px;font-weight:500;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--gold);
+  margin:1.5rem 0 0.85rem;display:flex;align-items:center;gap:8px;
+}
+.section-head::after{content:'';flex:1;height:0.5px;background:var(--b1)}
+.section-head:first-child{margin-top:0}
+
+.fgroup{margin-bottom:0.9rem}
+.flabel{
+  font-size:11px;font-weight:500;color:var(--muted);
+  letter-spacing:0.08em;text-transform:uppercase;
+  margin-bottom:5px;display:flex;align-items:center;gap:6px;
+}
+.flabel .tip{
+  font-size:9.5px;text-transform:none;letter-spacing:0;
+  background:var(--s3);color:var(--muted);
+  padding:1px 6px;border-radius:3px;font-weight:400;
+}
+.fi{
+  width:100%;background:var(--s2);border:0.5px solid var(--b1);
+  border-radius:8px;padding:0.6rem 0.8rem;
+  font-size:14px;font-family:'Inter',sans-serif;color:var(--white);
+  outline:none;transition:border-color 0.15s;-webkit-appearance:none;
+}
+.fi:focus{border-color:var(--gold-border)}
+.fi::placeholder{color:var(--muted);opacity:0.45}
+.fi-note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* NAME IDEAS */
+.ideas-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:0.5rem}
+.idea-pill{
+  padding:5px 12px;border-radius:6px;
+  border:0.5px solid var(--b2);background:var(--s2);
+  font-size:12px;color:var(--muted);cursor:pointer;
+  transition:all 0.15s;
+}
+.idea-pill:hover{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
+
+/* SAVE BTN */
+.save-section{
+  margin-top:1.5rem;padding-top:1.25rem;
+  border-top:0.5px solid var(--b1);
+  display:flex;flex-direction:column;gap:8px;
+}
+.btn{
+  width:100%;padding:0.75rem;border-radius:8px;
+  font-size:13px;font-weight:600;font-family:'Inter',sans-serif;
+  cursor:pointer;transition:all 0.15s;letter-spacing:0.01em;
+}
+.btn-primary{background:var(--gold);border:none;color:#0C0C0C}
+.btn-primary:hover{background:#D4B05C}
+.btn-secondary{background:transparent;border:0.5px solid var(--b2);color:var(--white)}
+.btn-secondary:hover{background:var(--s2)}
+
+/* PREVIEW COL */
+.preview-col{
+  padding:2rem 1.5rem;overflow-y:auto;
+  display:flex;flex-direction:column;gap:1.5rem;
+}
+.preview-label{
+  font-size:10px;font-weight:600;color:var(--muted);
+  letter-spacing:0.12em;text-transform:uppercase;
+  margin-bottom:0.85rem;
+}
+
+/* TOUCHPOINT CARDS */
+.touchpoint-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:1100px){.touchpoint-grid{grid-template-columns:1fr}}
+
+.tp-card{
+  background:var(--s1);border:0.5px solid var(--b1);
+  border-radius:14px;overflow:hidden;
+}
+.tp-header{
+  padding:0.75rem 1rem;border-bottom:0.5px solid var(--b1);
+  display:flex;align-items:center;gap:8px;
+}
+.tp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tp-title{font-size:12px;font-weight:500;color:var(--muted)}
+.tp-body{padding:1rem}
+
+/* MOCK COMPONENTS */
+
+/* Website header */
+.mock-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:#0C0C0C;border-radius:8px;
+}
+.mock-logo{font-size:13px;font-weight:600}
+.mock-logo em{font-style:normal}
+.mock-nav{display:flex;gap:10px}
+.mock-nav-item{font-size:10px;color:#888;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px}
+
+/* NFC card footer */
+.mock-footer{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 10px;background:#fff;border:1px solid rgba(60,60,67,0.12);
+  border-radius:20px;display:inline-flex;
+}
+.mock-footer-dot{width:6px;height:6px;border-radius:50%;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:0.35}}
+.mock-footer-text{font-size:11px;font-weight:500;color:#3C3C43}
+
+/* Domain badge */
+.mock-domain{
+  font-family:'Inter',monospace;font-size:12px;
+  background:var(--s2);border:0.5px solid var(--b2);
+  border-radius:6px;padding:8px 12px;color:var(--white);
+  display:flex;align-items:center;gap:8px;
+}
+.mock-domain-lock{color:var(--green);font-size:10px}
+
+/* Email signature */
+.mock-email-sig{
+  background:#fff;border-radius:8px;padding:10px 14px;
+  border-left:3px solid;
+}
+.mock-sig-name{font-size:13px;font-weight:700;color:#1C1C1E;margin-bottom:1px}
+.mock-sig-title{font-size:11px;color:#3C3C43;margin-bottom:3px}
+.mock-sig-company{font-size:11px;font-weight:600;margin-bottom:5px}
+.mock-sig-link{font-size:10px;color:#888}
+
+/* Invoice header */
+.mock-invoice{
+  background:#fff;border-radius:8px;padding:12px 14px;
+}
+.mock-inv-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.mock-inv-logo{font-size:15px;font-weight:700}
+.mock-inv-logo em{font-style:normal}
+.mock-inv-cn{font-size:10px;color:#888}
+.mock-inv-badge{font-size:10px;background:#F2F2F7;color:#3C3C43;padding:3px 8px;border-radius:4px}
+.mock-inv-line{height:0.5px;background:#E5E5EA;margin-bottom:8px}
+.mock-inv-detail{font-size:10px;color:#8E8E93;line-height:1.6}
+
+/* Packaging sticker */
+.mock-sticker{
+  background:;border-radius:10px;padding:12px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:4px;
+  border:2px solid;
+}
+.mock-stk-name{font-size:14px;font-weight:700}
+.mock-stk-cn{font-size:16px}
+.mock-stk-tag{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;opacity:0.7}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:rgba(28,28,30,0.95);backdrop-filter:blur(12px);
+  color:#fff;font-size:12px;font-weight:500;
+  padding:0.6rem 1.1rem;border-radius:20px;
+  display:flex;align-items:center;gap:7px;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:999;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,0.35);
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast svg{width:13px;height:13px;stroke:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">Brand Name Manager <em>· Gold Model</em></div>
+  <div class="status-pill unsaved" id="statusPill">
+    <div class="status-dot" style="background:var(--gold)"></div>
+    <span id="statusText">Unsaved changes</span>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ══ EDITOR ══ -->
+  <div class="editor-col">
+
+    <div class="section-head">Core brand name</div>
+
+    <div class="fgroup">
+      <label class="flabel">English name <span class="tip">Required</span></label>
+      <input class="fi" id="b-name" value="Gold Model" oninput="live()" placeholder="e.g. Gold Model, Tapd, Formify">
+      <div class="fi-note">This appears on your website, invoices, packaging, and all marketing materials.</div>
+    </div>
+
+    <div class="fgroup">
+      <label class="flabel">Chinese name <span class="tip">Optional</span></label>
+      <input class="fi" id="b-chinese" value="鑫坚" oninput="live()" placeholder="e.g. 鑫坚">
+      <div class="fi-note">Shown alongside English name for CNY gifting and Chinese-speaking clients.</div>
+    </div>
+
+    <div class="fgroup">
+      <label class="flabel">Tagline</label>
+      <input class="fi" id="b-tagline" value="Crafted in 3D. Connected by NFC." oninput="live()" placeholder="Your tagline here">
+    </div>
+
+    <div class="section-head">Domain & contact</div>
+
+    <div class="fgroup">
+      <label class="flabel">Primary domain</label>
+      <input class="fi" id="b-domain" value="goldmodel.sg" oninput="live()" placeholder="yourbrand.sg">
+      <div class="fi-note">Used in URLs, emails, and the "Powered by" badge on every client card.</div>
+    </div>
+
+    <div class="fgroup">
+      <label class="flabel">Card base URL</label>
+      <input class="fi" id="b-cardbase" value="card.goldmodel.sg" oninput="live()" placeholder="card.yourbrand.sg">
+      <div class="fi-note">Client cards live at card.yourdomain.sg/client-name</div>
+    </div>
+
+    <div class="fgroup">
+      <label class="flabel">Business email</label>
+      <input class="fi" id="b-email" value="hello@goldmodel.sg" oninput="live()" placeholder="hello@yourbrand.sg">
+    </div>
+
+    <div class="section-head">Accent colour</div>
+
+    <div class="fgroup">
+      <label class="flabel">Brand colour</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="color" id="b-colour" value="#C9A84C" oninput="live()" style="width:40px;height:36px;border:none;background:none;cursor:pointer;border-radius:6px">
+        <input class="fi" id="b-hex" value="#C9A84C" maxlength="7" oninput="syncColour(this.value)" style="font-family:'Inter',monospace;font-size:13px;letter-spacing:0.04em">
+      </div>
+      <div class="fi-note">Used throughout the card editor, footers, and branding elements.</div>
+    </div>
+
+    <div class="section-head">Name ideas <span style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;margin-left:4px">tap to preview</span></div>
+
+    <div class="ideas-grid">
+      <div class="idea-pill" onclick="tryName('Tapd','轻触','tap.sg','Tap into something different.')">Tapd</div>
+      <div class="idea-pill" onclick="tryName('Formify','成形','formify.sg','Give your brand a form.')">Formify</div>
+      <div class="idea-pill" onclick="tryName('Layrd','层叠','layrd.sg','Crafted layer by layer.')">Layrd</div>
+      <div class="idea-pill" onclick="tryName('Proxim','近距','proxim.sg','Close connections, crafted in 3D.')">Proxim</div>
+      <div class="idea-pill" onclick="tryName('Imprint3','印记','imprint3.sg','Leave your mark in 3D.')">Imprint3</div>
+      <div class="idea-pill" onclick="tryName('Gold Model','鑫坚','goldmodel.sg','Crafted in 3D. Connected by NFC.')">Gold Model</div>
+      <div class="idea-pill" onclick="tryName('NovaTap','诺达','novatap.sg','The next generation of networking.')">NovaTap</div>
+      <div class="idea-pill" onclick="tryName('TagCraft','标印','tagcraft.sg','Every card tells a story.')">TagCraft</div>
+    </div>
+
+    <div class="save-section">
+      <button class="btn btn-primary" onclick="saveBrand()">Save brand name</button>
+      <button class="btn btn-secondary" onclick="exportConfig()">Export brand.js config file</button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.5;margin-top:4px">
+        Saved locally in your browser. Export brand.js to update all your files at once.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ PREVIEW ══ -->
+  <div class="preview-col">
+
+    <div>
+      <div class="preview-label">Live preview — how your name appears everywhere</div>
+      <div class="touchpoint-grid">
+
+        <!-- Website header -->
+        <div class="tp-card">
+          <div class="tp-header">
+            <div class="tp-dot" style="background:#5AC8FA"></div>
+            <div class="tp-title">Website header</div>
+          </div>
+          <div class="tp-body">
+            <div class="mock-header">
+              <div class="mock-logo" id="prev-header-logo">gold<em style="color:#C9A84C">model</em></div>
+              <div class="mock-nav">
+                <div class="mock-nav-item">NFC Cards</div>
+                <div class="mock-nav-item">Corporate</div>
+                <div class="mock-nav-item">Contact</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Powered by badge -->
+        <div class="tp-card">
+          <div class="tp-header">
+            <div class="tp-dot" style="background:#30D158"></div>
+            <div class="tp-title">NFC card footer</div>
+          </div>
+          <div class="tp-body" style="display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+            <div class="mock-footer" id="prev-footer">
+              <div class="mock-footer-dot" id="prev-footer-dot" style="background:#C9A84C"></div>
+              <div class="mock-footer-text" id="prev-footer-text">Powered by Gold Model</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted)">Appears at the bottom of every client card</div>
+          </div>
+        </div>
+
+        <!-- Domain -->
+        <div class="tp-card">
+          <div class="tp-header">
+            <div class="tp-dot" style="background:#FF9F0A"></div>
+            <div class="tp-title">Domain & card URLs</div>
+          </div>
+          <div class="tp-body" style="display:flex;flex-direction:column;gap:6px">
+            <div class="mock-domain" id="prev-domain1">
+              <span class="mock-domain-lock">🔒</span>
+              <span id="prev-d1">https://goldmodel.sg</span>
+            </div>
+            <div class="mock-domain" id="prev-domain2">
+              <span class="mock-domain-lock">🔒</span>
+              <span id="prev-d2">card.goldmodel.sg/kelvin-chua</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email signature -->
+        <div class="tp-card">
+          <div class="tp-header">
+            <div class="tp-dot" style="background:#BF5AF2"></div>
+            <div class="tp-title">Email signature</div>
+          </div>
+          <div class="tp-body">
+            <div class="mock-email-sig" id="prev-email-sig" style="border-left-color:#C9A84C">
+              <div class="mock-sig-name">Kai Xin Fang</div>
+              <div class="mock-sig-title">Founder</div>
+              <div class="mock-sig-company" id="prev-sig-company" style="color:#C9A84C">Gold Model · 鑫坚</div>
+              <div class="mock-sig-link" id="prev-sig-link">hello@goldmodel.sg · goldmodel.sg</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoice -->
+        <div class="tp-card">
+          <div class="tp-header">
+            <div class="tp-dot" style="background:#FF6B35"></div>
+            <div class="tp-title">Invoice / receipt</div>
+          </div>
+          <div class="tp-body">
+            <div class="mock-invoice">
+              <div class="mock-inv-top">
+                <div>
+                  <div class="mock-inv-logo" id="prev-inv-name">Gold Model <em style="color:#C9A84C">·</em></div>
+                  <div class="mock-inv-cn" id="prev-inv-cn">鑫坚 · goldmodel.sg</div>
+                </div>
+                <div class="mock-inv-badge">INVOICE</div>
+              </div>
+              <div class="mock-inv-line"></div>
+              <div class="mock-inv-detail" id="prev-inv-detail">
+                hello@goldmodel.sg<br>
+                goldmodel.sg<br>
+                Singapore
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Packaging sticker -->
+        <div class="tp-card">
+          <div class="tp-header">
+            <div class="tp-dot" style="background:#FFD60A"></div>
+            <div class="tp-title">Packaging sticker</div>
+          </div>
+          <div class="tp-body" style="display:flex;justify-content:center">
+            <div class="mock-sticker" id="prev-sticker" style="background:linear-gradient(135deg,#1A1208,#0D0D0D);border-color:#C9A84C">
+              <div class="mock-stk-cn" id="prev-stk-cn">鑫坚</div>
+              <div class="mock-stk-name" id="prev-stk-name" style="color:#C9A84C">GOLD MODEL</div>
+              <div class="mock-stk-tag" style="color:#C9A84C">3D · NFC · SINGAPORE</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div style="background:var(--s1);border:0.5px solid var(--b1);border-radius:14px;padding:1.25rem">
+      <div style="font-size:12px;font-weight:600;color:var(--white);margin-bottom:1rem">When you finalise your name — update checklist</div>
+      <div style="display:flex;flex-direction:column;gap:8px" id="checklist">
+        <div class="check-item" data-key="brand.js">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Update brand.js config file</span>
+        </div>
+        <div class="check-item" data-key="bizfile">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Register on Bizfile+ (ACRA)</span>
+        </div>
+        <div class="check-item" data-key="domain">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Register domain on Vodien</span>
+        </div>
+        <div class="check-item" data-key="instagram">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Claim Instagram @handle</span>
+        </div>
+        <div class="check-item" data-key="linkedin">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Create LinkedIn company page</span>
+        </div>
+        <div class="check-item" data-key="email">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Set up hello@yourdomain.sg email</span>
+        </div>
+        <div class="check-item" data-key="editor">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Update card editor with new domain</span>
+        </div>
+        <div class="check-item" data-key="cards">
+          <span class="ci-box">☐</span>
+          <span class="ci-text">Reprint any existing sample cards</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Done</span>
+</div>
+
+<style>
+.check-item{display:flex;align-items:center;gap:10px;padding:.55rem .75rem;background:var(--s2);border-radius:8px;cursor:pointer;transition:background 0.15s;border:0.5px solid transparent}
+.check-item:hover{background:var(--s3)}
+.check-item.done{border-color:rgba(52,199,89,0.2);background:rgba(52,199,89,0.06)}
+.ci-box{font-size:16px;width:20px;text-align:center;flex-shrink:0;transition:all 0.2s}
+.ci-text{font-size:12px;color:var(--muted)}
+.check-item.done .ci-text{color:var(--green);text-decoration:line-through}
+</style>
+
+<script>
+// Load saved brand
+let B = JSON.parse(localStorage.getItem('gm_brand') || 'null') || {
+  name:'Gold Model', chinese:'鑫坚', tagline:'Crafted in 3D. Connected by NFC.',
+  domain:'goldmodel.sg', cardbase:'card.goldmodel.sg', email:'hello@goldmodel.sg',
+  colour:'#C9A84C'
+};
+
+// Load saved checklist
+let checks = JSON.parse(localStorage.getItem('gm_checks') || '{}');
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('b-name').value = B.name;
+  document.getElementById('b-chinese').value = B.chinese;
+  document.getElementById('b-tagline').value = B.tagline;
+  document.getElementById('b-domain').value = B.domain;
+  document.getElementById('b-cardbase').value = B.cardbase;
+  document.getElementById('b-email').value = B.email;
+  document.getElementById('b-colour').value = B.colour;
+  document.getElementById('b-hex').value = B.colour;
+  updatePreviews();
+  renderChecklist();
+  setStatus(true);
+});
+
+function gv(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+function live() {
+  setStatus(false);
+  updatePreviews();
+}
+
+function syncColour(val) {
+  if(/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    try { document.getElementById('b-colour').value = val; } catch(e){}
+    live();
+  }
+}
+
+function updatePreviews() {
+  const name = gv('b-name') || 'Your Brand';
+  const cn = gv('b-chinese');
+  const domain = gv('b-domain') || 'yourbrand.sg';
+  const cardbase = gv('b-cardbase') || ('card.' + domain);
+  const email = gv('b-email') || ('hello@' + domain);
+  const colour = gv('b-hex') || '#C9A84C';
+  const tagline = gv('b-tagline');
+
+  // Header logo — split at last word for colour accent
+  const parts = name.split(' ');
+  const first = parts.slice(0,-1).join(' ');
+  const last = parts[parts.length-1];
+  if(parts.length > 1) {
+    document.getElementById('prev-header-logo').innerHTML = `${first} <em style="color:${colour}">${last}</em>`;
+  } else {
+    document.getElementById('prev-header-logo').innerHTML = `<em style="color:${colour}">${name}</em>`;
+  }
+
+  // Footer badge
+  document.getElementById('prev-footer-text').textContent = `Powered by ${name}`;
+  document.getElementById('prev-footer-dot').style.background = colour;
+
+  // Domains
+  document.getElementById('prev-d1').textContent = `https://${domain}`;
+  document.getElementById('prev-d2').textContent = `${cardbase}/kelvin-chua`;
+
+  // Email sig
+  document.getElementById('prev-sig-company').textContent = cn ? `${name} · ${cn}` : name;
+  document.getElementById('prev-sig-company').style.color = colour;
+  document.getElementById('prev-sig-link').textContent = `${email} · ${domain}`;
+  document.getElementById('prev-email-sig').style.borderLeftColor = colour;
+
+  // Invoice
+  document.getElementById('prev-inv-name').innerHTML = `${name} <em style="color:${colour}">·</em>`;
+  document.getElementById('prev-inv-cn').textContent = `${cn||''} · ${domain}`;
+  document.getElementById('prev-inv-detail').innerHTML = `${email}<br>${domain}<br>Singapore`;
+
+  // Packaging sticker
+  document.getElementById('prev-stk-name').textContent = name.toUpperCase();
+  document.getElementById('prev-stk-name').style.color = colour;
+  document.getElementById('prev-stk-cn').textContent = cn || '✦';
+  document.getElementById('prev-sticker').style.borderColor = colour;
+
+  // Header title
+  document.querySelector('.logo em').textContent = '· ' + name;
+}
+
+function tryName(name, chinese, domain, tagline) {
+  document.getElementById('b-name').value = name;
+  document.getElementById('b-chinese').value = chinese;
+  document.getElementById('b-domain').value = domain;
+  document.getElementById('b-cardbase').value = 'card.' + domain;
+  document.getElementById('b-email').value = 'hello@' + domain;
+  document.getElementById('b-tagline').value = tagline;
+  live();
+  toast(`Previewing "${name}"`);
+}
+
+function saveBrand() {
+  B = {
+    name: gv('b-name'), chinese: gv('b-chinese'), tagline: gv('b-tagline'),
+    domain: gv('b-domain'), cardbase: gv('b-cardbase'), email: gv('b-email'),
+    colour: gv('b-hex') || gv('b-colour')
+  };
+  localStorage.setItem('gm_brand', JSON.stringify(B));
+  setStatus(true);
+  toast('Brand saved!');
+}
+
+function setStatus(saved) {
+  const pill = document.getElementById('statusPill');
+  const text = document.getElementById('statusText');
+  if(saved) {
+    pill.className = 'status-pill saved';
+    pill.querySelector('.status-dot').style.background = 'var(--green)';
+    text.textContent = 'Saved';
+  } else {
+    pill.className = 'status-pill unsaved';
+    pill.querySelector('.status-dot').style.background = 'var(--gold)';
+    text.textContent = 'Unsaved changes';
+  }
+}
+
+function exportConfig() {
+  const name = gv('b-name') || 'Your Brand';
+  const cn = gv('b-chinese');
+  const domain = gv('b-domain') || 'yourbrand.sg';
+  const cardbase = gv('b-cardbase') || ('card.'+domain);
+  const email = gv('b-email') || ('hello@'+domain);
+  const colour = gv('b-hex') || '#C9A84C';
+  const tagline = gv('b-tagline');
+
+  const js = `/**
+ * ${name} — Master Brand Config
+ * Generated: ${new Date().toLocaleDateString('en-SG')}
+ * Change values here → paste into every HTML file to update everywhere
+ */
+
+const BRAND = {
+  name:     "${name}",
+  chinese:  "${cn}",
+  tagline:  "${tagline}",
+  domain:   "${domain}",
+  cardBase: "${cardbase}",
+  website:  "https://${domain}",
+  email:    "${email}",
+  gold:     "${colour}",
+  charcoal: "#1A1A1A",
+  white:    "#F5F5F0",
+
+  fullName()  { return this.chinese ? \`\${this.name} (\${this.chinese})\` : this.name; },
+  cardURL(s)  { return \`https://\${this.cardBase}/\${s}\`; },
+  poweredBy() { return \`Powered by \${this.name}\`; },
+};
+`;
+  const blob = new Blob([js], {type:'text/javascript'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'brand.js';
+  a.click();
+  toast('brand.js downloaded');
+}
+
+// Checklist
+function renderChecklist() {
+  document.querySelectorAll('.check-item').forEach(item => {
+    const key = item.dataset.key;
+    if(checks[key]) item.classList.add('done');
+    item.querySelector('.ci-box').textContent = checks[key] ? '☑' : '☐';
+    item.onclick = () => toggleCheck(key, item);
+  });
+}
+
+function toggleCheck(key, el) {
+  checks[key] = !checks[key];
+  localStorage.setItem('gm_checks', JSON.stringify(checks));
+  el.classList.toggle('done', checks[key]);
+  el.querySelector('.ci-box').textContent = checks[key] ? '☑' : '☐';
+}
+
+let toastTimer;
+function toast(msg) {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.add('show');
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
